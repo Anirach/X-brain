@@ -18,7 +18,7 @@ import {
   Chat as ChatIcon,
   Visibility as VisualizeIcon,
 } from '@mui/icons-material';
-import { useGraph } from '../contexts/GraphContext';
+import { useGraph } from '../contexts/GraphContext.tsx';
 
 interface SidebarProps {
   activeView: 'graphs' | 'documents' | 'chat' | 'visualize';

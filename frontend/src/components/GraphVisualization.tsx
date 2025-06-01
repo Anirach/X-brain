@@ -35,9 +35,9 @@ import {
   SkipPrevious
 } from '@mui/icons-material';
 import * as d3 from 'd3';
-import { apiService } from '../services/api';
-import { VisualizationData, GraphNode, GraphEdge, VisualizationRequest, SubgraphResponse } from '../types/api';
-import { useGraph } from '../contexts/GraphContext';
+import { apiService } from '../services/api.ts';
+import { VisualizationData, GraphNode, GraphEdge, VisualizationRequest, SubgraphResponse } from '../types/api.ts';
+import { useGraph } from '../contexts/GraphContext.tsx';
 
 interface GraphVisualizationProps {
   onNodeClick?: (node: GraphNode) => void;

@@ -28,9 +28,9 @@ import {
   Close
 } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
-import { apiService } from '../services/api';
-import { Document } from '../types/api';
-import { useGraph } from '../contexts/GraphContext';
+import { apiService } from '../services/api.ts';
+import { Document } from '../types/api.ts';
+import { useGraph } from '../contexts/GraphContext.tsx';
 
 interface DocumentLoaderProps {
   onDocumentUploaded?: (document: Document) => void;

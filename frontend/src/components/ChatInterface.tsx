@@ -25,9 +25,9 @@ import {
   Download,
   ContentCopy
 } from '@mui/icons-material';
-import { apiService } from '../services/api';
-import { ChatMessage, ChatRequest, ChatResponse } from '../types/api';
-import { useGraph } from '../contexts/GraphContext';
+import { apiService } from '../services/api.ts';
+import { ChatMessage, ChatRequest, ChatResponse } from '../types/api.ts';
+import { useGraph } from '../contexts/GraphContext.tsx';
 
 interface ChatInterfaceProps {
   onMessageSent?: (message: ChatMessage) => void;

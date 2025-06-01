@@ -22,11 +22,11 @@ import {
   TrendingUp,
   Timeline
 } from '@mui/icons-material';
-import { useGraph } from '../contexts/GraphContext';
-import GraphManager from './GraphManager';
-import DocumentLoader from './DocumentLoader';
-import ChatInterface from './ChatInterface';
-import GraphVisualization from './GraphVisualization';
+import { useGraph } from '../contexts/GraphContext.tsx';
+import GraphManager from './GraphManager.tsx';
+import DocumentLoader from './DocumentLoader.tsx';
+import ChatInterface from './ChatInterface.tsx';
+import GraphVisualization from './GraphVisualization.tsx';
 
 interface TabPanelProps {
   children?: React.ReactNode;

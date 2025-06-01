@@ -21,7 +21,7 @@ import {
   AccountTree as GraphIcon,
   Timeline as TimelineIcon,
 } from '@mui/icons-material';
-import { useGraph } from '../contexts/GraphContext';
+import { useGraph } from '../contexts/GraphContext.tsx';
 
 interface GraphManagerProps {
   onGraphCreated: (graphId: string) => void;

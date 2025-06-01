@@ -3,8 +3,8 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Box } from '@mui/material';
 
-import Dashboard from './components/Dashboard';
-import { GraphProvider } from './contexts/GraphContext';
+import Dashboard from './components/Dashboard.tsx';
+import { GraphProvider } from './contexts/GraphContext.tsx';
 
 const theme = createTheme({
   palette: {

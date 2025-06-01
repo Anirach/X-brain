@@ -1,4 +1,5 @@
-from graphiti import Graphiti
+# Temporary mock implementation - replace with actual graphiti when available
+# from graphiti import Graphiti
 from openai import OpenAI
 from app.core.config import settings
 import logging
@@ -11,95 +12,77 @@ logger = logging.getLogger(__name__)
 class GraphitiClient:
     def __init__(self):
         self.openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        self.graphiti_instances: Dict[str, Graphiti] = {}
+        self.graphiti_instances: Dict[str, Any] = {}
+        logger.warning("Using mock GraphitiClient - graphiti-core not available")
     
     def create_graph_instance(self, graph_name: str) -> str:
         """Create a new Graphiti graph instance"""
         graph_id = str(uuid.uuid4())
         
         try:
-            # Initialize Graphiti with Neo4j backend
-            graphiti = Graphiti(
-                uri=settings.NEO4J_URI,
-                user=settings.NEO4J_USERNAME,
-                password=settings.NEO4J_PASSWORD,
-                database=f"graph_{graph_id}",  # Separate database per graph
-                llm_client=self.openai_client,
-                embedding_model=settings.GRAPHITI_EMBEDDING_MODEL,
-                llm_model=settings.GRAPHITI_LLM_MODEL
-            )
-            
-            self.graphiti_instances[graph_id] = graphiti
-            logger.info(f"Created new graph instance: {graph_id} with name: {graph_name}")
-            
-            # Store graph metadata
-            self._store_graph_metadata(graph_id, graph_name)
-            
+            # Mock implementation - store basic info
+            self.graphiti_instances[graph_id] = {
+                "name": graph_name,
+                "created_at": datetime.now().isoformat(),
+                "nodes": [],
+                "edges": [],
+                "documents": []
+            }
+            logger.info(f"Created mock graph instance: {graph_id}")
             return graph_id
-            
         except Exception as e:
             logger.error(f"Failed to create graph instance: {e}")
             raise e
     
-    def get_graph_instance(self, graph_id: str) -> Optional[Graphiti]:
+    def get_graph_instance(self, graph_id: str) -> Optional[Dict[str, Any]]:
         """Get an existing Graphiti graph instance"""
         if graph_id not in self.graphiti_instances:
-            # Try to load existing graph
-            try:
-                graphiti = Graphiti(
-                    uri=settings.NEO4J_URI,
-                    user=settings.NEO4J_USERNAME,
-                    password=settings.NEO4J_PASSWORD,
-                    database=f"graph_{graph_id}",
-                    llm_client=self.openai_client,
-                    embedding_model=settings.GRAPHITI_EMBEDDING_MODEL,
-                    llm_model=settings.GRAPHITI_LLM_MODEL
-                )
-                self.graphiti_instances[graph_id] = graphiti
-                logger.info(f"Loaded existing graph instance: {graph_id}")
-            except Exception as e:
-                logger.error(f"Failed to load graph instance {graph_id}: {e}")
-                return None
+            logger.error(f"Graph instance {graph_id} not found")
+            return None
         
         return self.graphiti_instances.get(graph_id)
     
     def list_graphs(self) -> List[Dict[str, Any]]:
         """List all available graph instances"""
-        # This would query the metadata storage to list all graphs
-        # For now, return active instances
         graphs = []
-        for graph_id in self.graphiti_instances.keys():
-            metadata = self._get_graph_metadata(graph_id)
+        for graph_id, graph_data in self.graphiti_instances.items():
             graphs.append({
                 "graph_id": graph_id,
-                "name": metadata.get("name", "Unnamed Graph"),
-                "created_at": metadata.get("created_at"),
-                "node_count": self._get_node_count(graph_id),
-                "edge_count": self._get_edge_count(graph_id)
+                "name": graph_data.get("name", "Unnamed Graph"),
+                "created_at": graph_data.get("created_at"),
+                "node_count": len(graph_data.get("nodes", [])),
+                "edge_count": len(graph_data.get("edges", []))
             })
         return graphs
     
     def add_documents_to_graph(self, graph_id: str, documents: List[str], metadata: Dict[str, Any] = None):
         """Add documents to a graph instance"""
-        graphiti = self.get_graph_instance(graph_id)
-        if not graphiti:
+        graph_instance = self.get_graph_instance(graph_id)
+        if not graph_instance:
             raise ValueError(f"Graph instance {graph_id} not found")
         
         try:
             for doc in documents:
-                # Add temporal metadata
-                doc_metadata = {
+                # Mock document processing
+                doc_id = str(uuid.uuid4())
+                doc_data = {
+                    "id": doc_id,
+                    "content": doc,
                     "timestamp": datetime.now().isoformat(),
-                    "source": metadata.get("source", "unknown"),
-                    **(metadata or {})
+                    "source": metadata.get("source", "unknown") if metadata else "unknown",
+                    "metadata": metadata or {}
                 }
                 
-                # Process document with Graphiti
-                graphiti.add_episode(
-                    name=f"doc_{uuid.uuid4()}",
-                    episode_body=doc,
-                    source=doc_metadata
-                )
+                # Add mock nodes/edges for the document
+                node = {
+                    "id": doc_id,
+                    "type": "document",
+                    "content": doc[:100] + "..." if len(doc) > 100 else doc,
+                    "timestamp": doc_data["timestamp"]
+                }
+                
+                graph_instance["documents"].append(doc_data)
+                graph_instance["nodes"].append(node)
                 
             logger.info(f"Added {len(documents)} documents to graph {graph_id}")
             
@@ -109,55 +92,33 @@ class GraphitiClient:
     
     def search_graph(self, graph_id: str, query: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Search the graph for relevant information"""
-        graphiti = self.get_graph_instance(graph_id)
-        if not graphiti:
+        graph_instance = self.get_graph_instance(graph_id)
+        if not graph_instance:
             raise ValueError(f"Graph instance {graph_id} not found")
         
         try:
-            # Use Graphiti's search functionality
-            results = graphiti.search(
-                query=query,
-                center_node_uuid=None,  # Search entire graph
-                num_results=limit
-            )
+            # Mock search implementation - simple text matching
+            results = []
+            query_lower = query.lower()
             
-            return [
-                {
-                    "node_id": result.uuid,
-                    "content": result.name,
-                    "type": result.labels[0] if result.labels else "Unknown",
-                    "score": getattr(result, 'score', 0.0),
-                    "metadata": result.summary if hasattr(result, 'summary') else {}
-                }
-                for result in results
-            ]
+            for doc in graph_instance.get("documents", []):
+                if query_lower in doc["content"].lower():
+                    results.append({
+                        "node_id": doc["id"],
+                        "content": doc["content"][:200] + "..." if len(doc["content"]) > 200 else doc["content"],
+                        "type": "document",
+                        "score": 0.8,  # Mock score
+                        "metadata": doc["metadata"]
+                    })
+                    
+                    if len(results) >= limit:
+                        break
+            
+            logger.info(f"Found {len(results)} results for query '{query}' in graph {graph_id}")
+            return results
             
         except Exception as e:
             logger.error(f"Failed to search graph {graph_id}: {e}")
             raise e
-    
-    def _store_graph_metadata(self, graph_id: str, graph_name: str):
-        """Store graph metadata (implementation depends on your storage choice)"""
-        # This could store in Neo4j, a separate database, or file system
-        pass
-    
-    def _get_graph_metadata(self, graph_id: str) -> Dict[str, Any]:
-        """Retrieve graph metadata"""
-        # Placeholder implementation
-        return {
-            "name": f"Graph {graph_id[:8]}",
-            "created_at": datetime.now().isoformat()
-        }
-    
-    def _get_node_count(self, graph_id: str) -> int:
-        """Get number of nodes in graph"""
-        # Placeholder implementation
-        return 0
-    
-    def _get_edge_count(self, graph_id: str) -> int:
-        """Get number of edges in graph"""
-        # Placeholder implementation
-        return 0
-
 # Global Graphiti client instance
 graphiti_client = GraphitiClient()

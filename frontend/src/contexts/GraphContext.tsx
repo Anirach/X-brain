@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Graph } from '../types/api';
-import { ApiService } from '../services/api';
+import { Graph } from '../types/api.ts';
+import { ApiService } from '../services/api.ts';
 
 interface GraphContextType {
   graphs: Graph[];
@@ -34,7 +34,21 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    refreshGraphs();
+    const loadGraphs = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await ApiService.listGraphs();
+        setGraphs(response.data.graphs);
+      } catch (err) {
+        setError('Failed to load graphs');
+        console.error('Error loading graphs:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadGraphs();
   }, []);
 
   const refreshGraphs = async () => {
