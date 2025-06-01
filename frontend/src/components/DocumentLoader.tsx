@@ -86,9 +86,15 @@ const DocumentLoader: React.FC<DocumentLoaderProps> = ({ onDocumentUploaded }) =
           true
         );
         
-        setDocuments(prev => [...prev, response.data]);
+        // Transform DocumentResponse to Document by mapping document_id to id
+        const documentData: Document = {
+          ...response.data,
+          id: response.data.document_id
+        };
+        
+        setDocuments(prev => [...prev, documentData]);
         setSuccess(`Successfully uploaded ${file.name}`);
-        onDocumentUploaded?.(response.data);
+        onDocumentUploaded?.(documentData);
 
       } catch (err: any) {
         console.error('Upload error:', err);
@@ -122,7 +128,12 @@ const DocumentLoader: React.FC<DocumentLoaderProps> = ({ onDocumentUploaded }) =
 
     try {
       const response = await apiService.listDocuments(selectedGraph.graph_id);
-      setDocuments(response.data);
+      // Transform DocumentResponse array to Document array by mapping document_id to id
+      const documentsData: Document[] = response.data.map((doc: any) => ({
+        ...doc,
+        id: doc.document_id
+      }));
+      setDocuments(documentsData);
     } catch (err) {
       console.error('Load documents error:', err);
       setError('Failed to load documents');

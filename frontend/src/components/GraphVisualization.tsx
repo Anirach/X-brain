@@ -36,7 +36,7 @@ import {
 } from '@mui/icons-material';
 import * as d3 from 'd3';
 import { apiService } from '../services/api';
-import { VisualizationData, GraphNode, GraphEdge, VisualizationRequest } from '../types/api';
+import { VisualizationData, GraphNode, GraphEdge, VisualizationRequest, SubgraphResponse } from '../types/api';
 import { useGraph } from '../contexts/GraphContext';
 
 interface GraphVisualizationProps {
@@ -90,20 +90,50 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ onNodeClick, on
         graph_id: selectedGraph.graph_id,
         layout_type: layoutType,
         include_timestamps: viewMode === 'timeline',
-        max_nodes: 200,
-        min_edge_weight: minEdgeWeight,
+        node_limit: 200,
         node_types: nodeTypeFilter.length > 0 ? nodeTypeFilter : undefined,
-        edge_types: edgeTypeFilter.length > 0 ? edgeTypeFilter : undefined
+        relationship_types: edgeTypeFilter.length > 0 ? edgeTypeFilter : undefined
       };
 
       const vizData = await apiService.getVisualizationData(request);
-      setData(vizData);
+      const responseData: SubgraphResponse = vizData.data;
+      
+      // Transform the data to match our visualization types
+      const visualizationData: VisualizationData = {
+        nodes: responseData.nodes.map(node => ({
+          id: node.node_id,
+          node_id: node.node_id,
+          labels: node.labels,
+          properties: node.properties,
+          name: node.properties.name || node.properties.title || node.node_id,
+          node_type: node.labels[0] || 'Entity',
+          created_at: node.created_at
+        })),
+        edges: responseData.edges.map(edge => ({
+          id: edge.edge_id,
+          edge_id: edge.edge_id,
+          source: edge.source_node_id,
+          target: edge.target_node_id,
+          source_id: edge.source_node_id,
+          target_id: edge.target_node_id,
+          source_node_id: edge.source_node_id,
+          target_node_id: edge.target_node_id,
+          relationship_type: edge.relationship_type,
+          edge_type: edge.relationship_type,
+          weight: edge.properties.weight || 1,
+          properties: edge.properties,
+          created_at: edge.created_at
+        })),
+        metadata: responseData.metadata
+      };
+      
+      setData(visualizationData);
       
       // Update time range for timeline mode
-      if (viewMode === 'timeline' && vizData.nodes.length > 0) {
-        const timestamps = vizData.nodes
-          .map(n => new Date(n.created_at).getTime())
-          .filter(t => !isNaN(t));
+      if (viewMode === 'timeline' && visualizationData.nodes.length > 0) {
+        const timestamps = visualizationData.nodes
+          .map(n => n.created_at ? new Date(n.created_at).getTime() : null)
+          .filter((t): t is number => t !== null && !isNaN(t));
         
         if (timestamps.length > 0) {
           const minTime = Math.min(...timestamps);
@@ -119,7 +149,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ onNodeClick, on
     } finally {
       setLoading(false);
     }
-  }, [selectedGraph, layoutType, viewMode, minEdgeWeight, nodeTypeFilter, edgeTypeFilter]);
+  }, [selectedGraph, layoutType, viewMode, nodeTypeFilter, edgeTypeFilter]);
 
   // Initialize D3 visualization
   const initializeVisualization = useCallback(() => {
@@ -160,13 +190,14 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ onNodeClick, on
     if (viewMode === 'timeline') {
       const currentTimeMs = currentTime;
       filteredNodes = data.nodes.filter(node => {
+        if (!node.created_at) return true;
         const nodeTime = new Date(node.created_at).getTime();
         return nodeTime <= currentTimeMs;
       });
       
       const nodeIds = new Set(filteredNodes.map(n => n.id));
       filteredEdges = data.edges.filter(edge => 
-        nodeIds.has(edge.source_id) && nodeIds.has(edge.target_id)
+        nodeIds.has(edge.source_id!) && nodeIds.has(edge.target_id!)
       );
     }
 
@@ -225,7 +256,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ onNodeClick, on
       .data(filteredNodes)
       .enter().append('circle')
       .attr('r', nodeSize)
-      .attr('fill', (d: GraphNode) => getNodeColor(d.node_type))
+      .attr('fill', (d: GraphNode) => getNodeColor(d.node_type || 'default'))
       .attr('stroke', '#fff')
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
@@ -241,8 +272,8 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ onNodeClick, on
         })
         .on('end', (event, d) => {
           if (!event.active) simulation.alphaTarget(0);
-          d.fx = null;
-          d.fy = null;
+          d.fx = undefined;
+          d.fy = undefined;
         }))
       .on('click', (event, d) => {
         setSelectedNode(d);

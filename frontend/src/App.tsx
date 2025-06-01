@@ -1,10 +1,8 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline, Box, Drawer, Toolbar } from '@mui/material';
+import { CssBaseline, Box } from '@mui/material';
 
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import { GraphProvider } from './contexts/GraphContext';
 
@@ -27,47 +25,14 @@ const theme = createTheme({
   },
 });
 
-const DRAWER_WIDTH = 280;
-
 const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <GraphProvider>
         <Router>
-          <Box sx={{ display: 'flex' }}>
-            <Header />
-            <Drawer
-              variant="permanent"
-              sx={{
-                width: DRAWER_WIDTH,
-                flexShrink: 0,
-                '& .MuiDrawer-paper': {
-                  width: DRAWER_WIDTH,
-                  boxSizing: 'border-box',
-                },
-              }}
-            >
-              <Toolbar />
-              <Sidebar activeView="graphs" onViewChange={() => {}} />
-            </Drawer>
-            <Box
-              component="main"
-              sx={{
-                flexGrow: 1,
-                p: 3,
-                width: `calc(100% - ${DRAWER_WIDTH}px)`,
-              }}
-            >
-              <Toolbar />
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/graphs" element={<Dashboard />} />
-                <Route path="/documents" element={<Dashboard />} />
-                <Route path="/chat" element={<Dashboard />} />
-                <Route path="/visualize" element={<Dashboard />} />
-              </Routes>
-            </Box>
+          <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', p: 2 }}>
+            <Dashboard />
           </Box>
         </Router>
       </GraphProvider>

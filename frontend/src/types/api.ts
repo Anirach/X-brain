@@ -25,6 +25,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  session_id?: string; // Added for session tracking
   sources?: Array<{
     node_id: string;
     type: string;
@@ -47,6 +48,7 @@ export interface ChatRequest {
   context_limit?: number;
   search_limit?: number;
   include_sources?: boolean; // Added for source inclusion
+  max_tokens?: number; // Added for token limit
 }
 
 export interface ChatResponse {
@@ -70,6 +72,7 @@ export interface ChatResponse {
 }
 
 export interface DocumentResponse {
+  id: string; // Added for compatibility with Document interface
   document_id: string;
   filename: string;
   file_path: string;
@@ -122,6 +125,7 @@ export interface VisualizationRequest {
   time_filter?: Record<string, string>;
   node_types?: string[];
   relationship_types?: string[];
+  include_timestamps?: boolean; // Added for timeline mode
 }
 
 export interface TimelineRequest {
@@ -175,10 +179,12 @@ export interface GraphNode {
   node_id: string;
   labels: string[];
   properties: Record<string, any>;
+  name?: string; // Added for display purposes
+  node_type?: string; // Added for typing (derived from labels)
   x?: number;
   y?: number;
-  fx?: number;
-  fy?: number;
+  fx?: number | undefined;
+  fy?: number | undefined;
   created_at?: string;
   updated_at?: string;
 }
@@ -188,9 +194,13 @@ export interface GraphEdge {
   edge_id: string;
   source: string;
   target: string;
+  source_id?: string; // Added for compatibility
+  target_id?: string; // Added for compatibility
   source_node_id: string;
   target_node_id: string;
   relationship_type: string;
+  edge_type?: string; // Added for display (same as relationship_type)
+  weight?: number; // Added for visualization
   properties: Record<string, any>;
   created_at?: string;
 }

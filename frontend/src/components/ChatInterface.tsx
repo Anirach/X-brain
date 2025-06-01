@@ -87,16 +87,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessageSent }) => {
         max_tokens: 500
       };
 
-      const response: ChatResponse = await apiService.sendChatMessage(chatRequest);
+      const response = await apiService.sendChatMessage(chatRequest);
+      const responseData: ChatResponse = response.data;
 
       const assistantMessage: ChatMessage = {
         id: `msg_${Date.now()}_assistant`,
         role: 'assistant',
-        content: response.response,
+        content: responseData.response,
         timestamp: new Date().toISOString(),
         session_id: sessionId,
-        sources: response.sources,
-        context_nodes: response.context_nodes
+        sources: responseData.sources,
+        context_nodes: responseData.context_nodes
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -194,7 +195,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessageSent }) => {
                   {message.sources.map((source, index) => (
                     <Chip
                       key={index}
-                      label={source}
+                      label={`${source.type}: ${source.content.substring(0, 50)}...`}
                       size="small"
                       variant="outlined"
                       color="primary"
@@ -214,7 +215,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMessageSent }) => {
                   {message.context_nodes.map((node, index) => (
                     <Chip
                       key={index}
-                      label={node}
+                      label={`${node.type}: ${node.node_id}`}
                       size="small"
                       variant="outlined"
                       color="secondary"
