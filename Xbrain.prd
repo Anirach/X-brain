@@ -1,0 +1,114 @@
+# Product Requirements Document (PRD)
+Project Title: Knowledge Graph AI Agent System
+Prepared by: [Your Name]
+Date: June 1, 2025
+Version: 1.0
+
+---
+
+1. Overview
+
+This application integrates Graphiti as a temporal knowledge graph engine to empower AI agents to reason over time-evolving knowledge. It uses Neo4j for persistent graph storage, OpenAI API for inference and embeddings, and D3.js for interactive visualization. The backend is developed in Python 3.10+ using Pydantic for data validation and modeling.
+
+---
+
+2. Objectives
+
+- Enable intelligent agents to ingest, store, and reason over documents in the form of temporal knowledge graphs.
+- Provide seamless UI tabs for document ingestion, graph interaction, and chatbot communication.
+- Support dynamic knowledge updates and exploration across multiple graph instances within a Neo4j database.
+
+---
+
+3. Technology Stack
+
+Component           | Technology / Tool
+-------------------|------------------------------------
+Backend             | Python 3.10+, FastAPI, Pydantic
+Graph Engine        | Graphiti (https://github.com/getzep/graphiti)
+Graph Database      | Neo4j 5.26+
+LLM Inference       | OpenAI GPT-4 via API
+Embeddings          | OpenAI Embeddings API
+Frontend            | React + TypeScript
+Visualization       | D3.js
+Document Parsing    | PDFMiner / PyMuPDF, LangChain
+
+---
+
+4. Functional Requirements
+
+4.1. Document Loader Tab
+- Upload and parse documents in .pdf or .txt format.
+- Extract entities and relationships using OpenAI embeddings.
+- Convert parsed data into Graphiti-compatible schema.
+- Load temporal knowledge into Graphiti with metadata (timestamp, source).
+- Store graph data in Neo4j instance.
+
+4.2. Chat Tab (RAG-Enabled Agent)
+- User-friendly chat interface (React).
+- Each chat session references a selected knowledge graph.
+- RAG (Retrieval-Augmented Generation) pipeline:
+  - Extract user intent.
+  - Query Graphiti temporal graph.
+  - Retrieve relevant nodes/subgraphs.
+  - Feed into OpenAI API with the query context.
+  - Return LLM-generated response.
+- Option to switch between different graphs.
+
+4.3. Graph View Tab
+- Visualize the knowledge graph using D3.js.
+- Display nodes, edges, timestamps, and metadata.
+- Interactive exploration:
+  - Clickable nodes to display attributes.
+  - Filtering by time, type, or source.
+  - Graph animation over time.
+- Option to edit or delete nodes (admin only).
+
+4.4. Multi-Graph Management
+- Allow multiple knowledge graphs per Neo4j instance.
+- List and switch between graphs from the UI.
+- Isolate RAG operations per selected graph.
+- Each graph has unique UUID and metadata.
+
+---
+
+5. Non-Functional Requirements
+
+- Performance: Must load graphs and respond to chat queries within 2 seconds under standard load.
+- Security: API key securely stored and not exposed in frontend.
+- Scalability: Support up to 10 concurrent graph instances.
+- Compliance: Logs all LLM queries for audit and traceability.
+
+---
+
+6. Requisites / Dependencies
+
+- Python >= 3.10
+- Neo4j >= 5.26
+- OpenAI API key
+- Node.js and npm (for React/D3 frontend)
+- Access to Graphiti and Neo4j running instances
+
+---
+
+7. Milestones & Timeline
+
+Milestone                            | Target Date
+-------------------------------------|-------------------
+Backend architecture + Graphiti setup| Week 1
+Neo4j integration                    | Week 2
+Document loader implementation       | Week 3
+RAG chatbot integration              | Week 4
+Graph view and D3.js visualization   | Week 5
+Multi-graph management support       | Week 6
+Testing, QA, and bug fixes           | Week 7
+Deployment and documentation         | Week 8
+
+---
+
+8. Future Enhancements
+
+- Fine-tuned domain-specific LLM integration.
+- Semantic search over the graph.
+- User role management and access control.
+- Export graph to RDF or GraphQL endpoints.
