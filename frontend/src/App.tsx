@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline, Box } from '@mui/material';
+import { CssBaseline, Box, Drawer, Toolbar } from '@mui/material';
 
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
-import DocumentLoader from './components/DocumentLoader';
-import ChatInterface from './components/ChatInterface';
-import GraphVisualization from './components/GraphVisualization';
-import GraphManager from './components/GraphManager';
+import Dashboard from './components/Dashboard';
 import { GraphProvider } from './contexts/GraphContext';
-import { ApiService } from './services/api';
 
 const theme = createTheme({
   palette: {
@@ -31,81 +27,45 @@ const theme = createTheme({
   },
 });
 
+const DRAWER_WIDTH = 280;
+
 const App: React.FC = () => {
-  const [selectedGraph, setSelectedGraph] = useState<string | null>(null);
-  const [graphs, setGraphs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadGraphs();
-  }, []);
-
-  const loadGraphs = async () => {
-    try {
-      const response = await ApiService.listGraphs();
-      setGraphs(response.data.graphs);
-      if (response.data.graphs.length > 0 && !selectedGraph) {
-        setSelectedGraph(response.data.graphs[0].graph_id);
-      }
-    } catch (error) {
-      console.error('Failed to load graphs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGraphCreated = (graphId: string) => {
-    loadGraphs();
-    setSelectedGraph(graphId);
-  };
-
-  const handleGraphSelected = (graphId: string) => {
-    setSelectedGraph(graphId);
-  };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <GraphProvider>
         <Router>
-          <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+          <Box sx={{ display: 'flex' }}>
             <Header />
-            <Sidebar 
-              graphs={graphs}
-              selectedGraph={selectedGraph}
-              onGraphSelected={handleGraphSelected}
-              onGraphCreated={handleGraphCreated}
-            />
+            <Drawer
+              variant="permanent"
+              sx={{
+                width: DRAWER_WIDTH,
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                  width: DRAWER_WIDTH,
+                  boxSizing: 'border-box',
+                },
+              }}
+            >
+              <Toolbar />
+              <Sidebar activeView="graphs" onViewChange={() => {}} />
+            </Drawer>
             <Box
               component="main"
               sx={{
                 flexGrow: 1,
                 p: 3,
-                mt: 8, // Account for header height
-                ml: 30, // Account for sidebar width
+                width: `calc(100% - ${DRAWER_WIDTH}px)`,
               }}
             >
+              <Toolbar />
               <Routes>
-                <Route 
-                  path="/" 
-                  element={<GraphManager onGraphCreated={handleGraphCreated} />} 
-                />
-                <Route 
-                  path="/documents" 
-                  element={<DocumentLoader selectedGraph={selectedGraph} />} 
-                />
-                <Route 
-                  path="/chat" 
-                  element={<ChatInterface selectedGraph={selectedGraph} />} 
-                />
-                <Route 
-                  path="/visualize" 
-                  element={<GraphVisualization selectedGraph={selectedGraph} />} 
-                />
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/graphs" element={<Dashboard />} />
+                <Route path="/documents" element={<Dashboard />} />
+                <Route path="/chat" element={<Dashboard />} />
+                <Route path="/visualize" element={<Dashboard />} />
               </Routes>
             </Box>
           </Box>

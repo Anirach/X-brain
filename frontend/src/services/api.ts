@@ -158,3 +158,7 @@ export class ApiService {
     return apiClient.get('/health');
   }
 }
+
+// Export both the class and a default instance
+export const apiService = ApiService;
+export default ApiService;

@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Drawer,
   List,
   ListItem,
   ListItemButton,
@@ -10,29 +9,20 @@ import {
   Divider,
   Typography,
   Box,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  Paper,
   Chip,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import {
-  Home as HomeIcon,
+  AccountTree as GraphIcon,
   Upload as UploadIcon,
   Chat as ChatIcon,
-  AccountTree as GraphIcon,
-  Add as AddIcon,
-  Refresh as RefreshIcon,
+  Visibility as VisualizeIcon,
 } from '@mui/icons-material';
-import { Graph } from '../types/api';
+import { useGraph } from '../contexts/GraphContext';
 
 interface SidebarProps {
-  graphs: Graph[];
-  selectedGraph: string | null;
-  onGraphSelected: (graphId: string) => void;
-  onGraphCreated: (graphId: string) => void;
+  activeView: 'graphs' | 'documents' | 'chat' | 'visualize';
+  onViewChange: (view: 'graphs' | 'documents' | 'chat' | 'visualize') => void;
 }
 
 const DRAWER_WIDTH = 240;
