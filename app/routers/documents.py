@@ -83,7 +83,10 @@ async def upload_document(
             document_id=document_id,
             status="queued",
             progress=0.0,
-            message="Document uploaded, processing queued"
+            message="Document uploaded, processing queued",
+            entities_extracted=0,
+            relationships_extracted=0,
+            errors=[]
         )
         
         # Start background processing
@@ -193,6 +196,8 @@ async def process_document_background(
         processing_status[document_id].status = "failed"
         processing_status[document_id].message = f"Processing failed: {str(e)}"
         processing_status[document_id].errors = [str(e)]
+        processing_status[document_id].entities_extracted = 0
+        processing_status[document_id].relationships_extracted = 0
 
 def update_processing_status(document_id: str, progress: float, message: str):
     """Update processing status callback"""

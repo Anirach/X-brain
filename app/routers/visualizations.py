@@ -22,72 +22,36 @@ async def get_graph_visualization_data(request: VisualizationRequest):
         if not graphiti:
             raise HTTPException(status_code=404, detail="Graph not found")
         
-        # Build Cypher query with filters
-        conditions = []
-        params = {"limit": request.node_limit}
-        
-        # Time filter
-        if request.time_filter:
-            if "start_date" in request.time_filter:
-                conditions.append("n.timestamp >= $start_date")
-                params["start_date"] = request.time_filter["start_date"]
-            if "end_date" in request.time_filter:
-                conditions.append("n.timestamp <= $end_date")
-                params["end_date"] = request.time_filter["end_date"]
-        
-        # Node type filter
-        if request.node_types:
-            label_conditions = " OR ".join([f"n:{label}" for label in request.node_types])
-            conditions.append(f"({label_conditions})")
-        
-        where_clause = " AND ".join(conditions) if conditions else "1=1"
-        
-        # Query nodes
-        node_query = f"""
-        USE graph_{request.graph_id}
-        MATCH (n)
-        WHERE {where_clause}
-        RETURN id(n) as node_id, labels(n) as labels, properties(n) as properties
-        LIMIT $limit
-        """
-        
-        # Query relationships
-        rel_query = f"""
-        USE graph_{request.graph_id}
-        MATCH (n)-[r]->(m)
-        WHERE {where_clause.replace('n.', 'n.')} AND {where_clause.replace('n.', 'm.')}
-        RETURN id(r) as edge_id, id(n) as source_id, id(m) as target_id, 
-               type(r) as rel_type, properties(r) as properties
-        LIMIT $limit
-        """
-        
-        with neo4j_db.session() as session:
-            node_results = session.run(node_query, params).data()
-            rel_results = session.run(rel_query, params).data()
+        # Mock implementation - return sample visualization data from our mock client
+        nodes_data = graphiti.get("nodes", [])
+        edges_data = graphiti.get("edges", [])
         
         # Convert to response format
-        nodes = [
-            NodeResponse(
-                node_id=str(node["node_id"]),
-                labels=node["labels"],
-                properties=node["properties"] or {},
-                created_at=None,  # Add if timestamp exists
+        nodes = []
+        for i, node_data in enumerate(nodes_data[:request.node_limit]):
+            nodes.append(NodeResponse(
+                node_id=node_data.get("id", f"node_{i}"),
+                labels=[node_data.get("type", "Document")],
+                properties={
+                    "name": node_data.get("content", f"Node {i}"),
+                    "timestamp": node_data.get("timestamp"),
+                    **node_data.get("properties", {})
+                },
+                created_at=node_data.get("timestamp"),
                 updated_at=None
-            )
-            for node in node_results
-        ]
+            ))
         
-        edges = [
-            EdgeResponse(
-                edge_id=str(edge["edge_id"]),
-                source_node_id=str(edge["source_id"]),
-                target_node_id=str(edge["target_id"]),
-                relationship_type=edge["rel_type"],
-                properties=edge["properties"] or {},
+        # Create some mock edges between nodes
+        edges = []
+        for i in range(min(len(nodes) - 1, 5)):  # Limit to 5 edges
+            edges.append(EdgeResponse(
+                edge_id=f"edge_{i}",
+                source_node_id=nodes[i].node_id,
+                target_node_id=nodes[i + 1].node_id if i + 1 < len(nodes) else nodes[0].node_id,
+                relationship_type="RELATES_TO",
+                properties={"weight": 0.8},
                 created_at=None
-            )
-            for edge in rel_results
-        ]
+            ))
         
         return SubgraphResponse(
             nodes=nodes,
@@ -99,6 +63,14 @@ async def get_graph_visualization_data(request: VisualizationRequest):
                     "time_filter": request.time_filter,
                     "node_types": request.node_types,
                     "relationship_types": request.relationship_types
+                },
+                "note": "Mock visualization data - replace with real Graphiti queries when available"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to get visualization data for graph {request.graph_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get visualization data: {str(e)}")
                 }
             }
         )
@@ -118,56 +90,29 @@ async def get_timeline_data(request: TimelineRequest):
         if not graphiti:
             raise HTTPException(status_code=404, detail="Graph not found")
         
-        # Build timeline query
-        conditions = ["n.timestamp IS NOT NULL"]
-        params = {}
+        # Mock timeline data
+        from datetime import datetime, timedelta
+        import random
         
-        if request.start_date:
-            conditions.append("n.timestamp >= $start_date")
-            params["start_date"] = request.start_date
-            
-        if request.end_date:
-            conditions.append("n.timestamp <= $end_date")
-            params["end_date"] = request.end_date
+        # Generate mock timeline data
+        timeline_data = []
+        start_date = datetime.now() - timedelta(days=30)
         
-        where_clause = " AND ".join(conditions)
-        
-        # Group by time granularity
-        time_format = {
-            "hour": "substring(n.timestamp, 0, 13)",
-            "day": "substring(n.timestamp, 0, 10)",
-            "week": "substring(n.timestamp, 0, 10)",  # Simplified
-            "month": "substring(n.timestamp, 0, 7)"
-        }.get(request.granularity, "substring(n.timestamp, 0, 10)")
-        
-        timeline_query = f"""
-        USE graph_{request.graph_id}
-        MATCH (n)
-        WHERE {where_clause}
-        WITH {time_format} as time_period, n
-        RETURN time_period, 
-               count(n) as node_count,
-               collect(DISTINCT labels(n)[0]) as node_types,
-               collect({{
-                   id: id(n),
-                   labels: labels(n),
-                   properties: properties(n)
-               }}) as nodes
-        ORDER BY time_period
-        """
-        
-        with neo4j_db.session() as session:
-            results = session.run(timeline_query, params).data()
-        
-        timeline_data = [
-            {
-                "time_period": result["time_period"],
-                "node_count": result["node_count"],
-                "node_types": result["node_types"],
-                "events": result["nodes"][:10]  # Limit events per period
-            }
-            for result in results
-        ]
+        for i in range(10):  # Generate 10 time periods
+            period_date = start_date + timedelta(days=i * 3)
+            timeline_data.append({
+                "time_period": period_date.strftime("%Y-%m-%d"),
+                "node_count": random.randint(1, 10),
+                "node_types": ["Document", "Entity", "Concept"],
+                "events": [
+                    {
+                        "id": f"event_{i}_{j}",
+                        "labels": ["Document"],
+                        "properties": {"name": f"Event {j} on {period_date.strftime('%Y-%m-%d')}"}
+                    }
+                    for j in range(min(3, random.randint(1, 5)))
+                ]
+            })
         
         return TimelineResponse(
             timeline_data=timeline_data,
@@ -177,6 +122,17 @@ async def get_timeline_data(request: TimelineRequest):
                 "total_periods": len(timeline_data),
                 "date_range": {
                     "start": request.start_date,
+                    "end": request.end_date
+                },
+                "note": "Mock timeline data - replace with real Graphiti queries when available"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get timeline data for graph {request.graph_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get timeline data: {str(e)}")
                     "end": request.end_date
                 }
             }
@@ -202,60 +158,65 @@ async def get_subgraph_around_node(
         if not graphiti:
             raise HTTPException(status_code=404, detail="Graph not found")
         
-        # Query for subgraph
-        subgraph_query = f"""
-        USE graph_{graph_id}
-        MATCH path = (center)-[*1..{depth}]-(connected)
-        WHERE id(center) = $node_id
-        WITH nodes(path) as path_nodes, relationships(path) as path_rels
-        UNWIND path_nodes as n
-        WITH collect(DISTINCT n) as all_nodes, path_rels
-        UNWIND path_rels as r
-        WITH all_nodes, collect(DISTINCT r) as all_rels
-        RETURN all_nodes[0..$limit] as nodes, all_rels[0..$limit] as relationships
-        """
+        # Mock subgraph data - return nodes around the central node
+        nodes_data = graphiti.get("nodes", [])
         
-        params = {"node_id": int(node_id), "limit": limit}
+        # Find the central node or create a mock one
+        central_node = None
+        for node in nodes_data:
+            if node.get("id") == node_id:
+                central_node = node
+                break
         
-        with neo4j_db.session() as session:
-            result = session.run(subgraph_query, params).single()
+        if not central_node:
+            # Create a mock central node
+            central_node = {
+                "id": node_id,
+                "type": "Document",
+                "content": f"Central Node {node_id}",
+                "timestamp": "2024-01-01T00:00:00Z"
+            }
         
-        if not result:
-            return SubgraphResponse(nodes=[], edges=[], metadata={})
+        # Create mock subgraph nodes (including central + connected)
+        subgraph_nodes = [central_node]
+        connected_nodes = nodes_data[:min(limit-1, 5)]  # Add up to 5 connected nodes
+        subgraph_nodes.extend(connected_nodes)
         
-        # Convert nodes
-        nodes = [
-            NodeResponse(
-                node_id=str(node.id),
-                labels=list(node.labels),
-                properties=dict(node),
-                created_at=None,
+        # Convert to response format
+        nodes = []
+        for i, node_data in enumerate(subgraph_nodes):
+            nodes.append(NodeResponse(
+                node_id=node_data.get("id", f"node_{i}"),
+                labels=[node_data.get("type", "Document")],
+                properties={
+                    "name": node_data.get("content", f"Node {i}"),
+                    "timestamp": node_data.get("timestamp"),
+                },
+                created_at=node_data.get("timestamp"),
                 updated_at=None
-            )
-            for node in result["nodes"] or []
-        ]
+            ))
         
-        # Convert relationships
-        edges = [
-            EdgeResponse(
-                edge_id=str(rel.id),
-                source_node_id=str(rel.start_node.id),
-                target_node_id=str(rel.end_node.id),
-                relationship_type=rel.type,
-                properties=dict(rel),
+        # Create mock edges between central node and others
+        edges = []
+        for i in range(1, len(nodes)):
+            edges.append(EdgeResponse(
+                edge_id=f"edge_{node_id}_{i}",
+                source_node_id=node_id,
+                target_node_id=nodes[i].node_id,
+                relationship_type="CONNECTED_TO",
+                properties={"distance": min(i, depth)},
                 created_at=None
-            )
-            for rel in result["relationships"] or []
-        ]
+            ))
         
         return SubgraphResponse(
             nodes=nodes,
             edges=edges,
             metadata={
-                "center_node_id": node_id,
+                "central_node_id": node_id,
                 "depth": depth,
                 "total_nodes": len(nodes),
-                "total_edges": len(edges)
+                "total_edges": len(edges),
+                "note": "Mock subgraph data - replace with real Graphiti queries when available"
             }
         )
         
