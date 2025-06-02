@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "./uploads"
     ALLOWED_FILE_TYPES: list = ["pdf", "txt"]
     
+    # Processing Settings
+    USE_MOCK_EXTRACTION: bool = True  # Set to False for real OpenAI extraction in production
+    MAX_CHUNKS_PER_DOCUMENT: int = 3  # Limit chunks for faster demo processing
+    
     # Logging
     LOG_LEVEL: str = "INFO"
     
