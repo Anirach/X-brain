@@ -1,0 +1,16 @@
+{
+  "short_name": "X-Brain",
+  "name": "X-Brain Knowledge Graph AI Agent System",
+  "description": "AI-powered knowledge graph system with document ingestion and RAG-enabled chatbot",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

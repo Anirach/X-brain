@@ -71,15 +71,6 @@ async def get_graph_visualization_data(request: VisualizationRequest):
     except Exception as e:
         logger.error(f"Failed to get visualization data for graph {request.graph_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get visualization data: {str(e)}")
-                }
-            }
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to get visualization data for graph {request.graph_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get visualization data: {str(e)}")
 
 @router.post("/timeline", response_model=TimelineResponse)
 async def get_timeline_data(request: TimelineRequest):
@@ -125,16 +116,6 @@ async def get_timeline_data(request: TimelineRequest):
                     "end": request.end_date
                 },
                 "note": "Mock timeline data - replace with real Graphiti queries when available"
-            }
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to get timeline data for graph {request.graph_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get timeline data: {str(e)}")
-                    "end": request.end_date
-                }
             }
         )
         
